@@ -2,12 +2,11 @@
 import logging
 
 from govee_api_laggat import Govee
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+import voluptuous as vol
 
 from .const import DOMAIN
 from .learning_storage import GoveeLearningStorage
@@ -54,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await async_unload_entry(hass, entry)
         raise PlatformNotReady()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
