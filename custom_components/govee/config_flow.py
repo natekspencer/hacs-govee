@@ -1,13 +1,15 @@
 """Config flow for Govee integration."""
+from __future__ import annotations
 
 import logging
+from typing import Any
 
-from govee_api_laggat import Govee, GoveeNoLearningStorage, GoveeError
-
-from homeassistant import config_entries, core, exceptions
-import homeassistant.helpers.config_validation as cv
+from govee_api_laggat import Govee, GoveeError, GoveeNoLearningStorage
+from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_DELAY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
 from .const import (
@@ -20,7 +22,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_api_key(hass: core.HomeAssistant, user_input):
+async def validate_api_key(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Return info that you want to store in the config entry.
@@ -35,7 +39,9 @@ async def validate_api_key(hass: core.HomeAssistant, user_input):
     return user_input
 
 
-async def validate_disabled_attribute_updates(hass: core.HomeAssistant, user_input):
+async def validate_disabled_attribute_updates(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> dict[str, Any]:
     """Validate format of the ignore_device_attributes parameter string
 
     Return info that you want to store in the config entry.
@@ -58,7 +64,9 @@ class GoveeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -91,7 +99,7 @@ class GoveeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry) -> GoveeOptionsFlowHandler:
         """Get the options flow."""
         return GoveeOptionsFlowHandler(config_entry)
 
@@ -101,16 +109,20 @@ class GoveeOptionsFlowHandler(config_entries.OptionsFlow):
 
     VERSION = 1
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         # get the current value for API key for comparison and default value
         old_api_key = self.config_entry.options.get(
@@ -201,7 +213,7 @@ class GoveeOptionsFlowHandler(config_entries.OptionsFlow):
             errors=errors,
         )
 
-    async def _update_options(self):
+    async def _update_options(self) -> FlowResult:
         """Update config entry options."""
         return self.async_create_entry(title=DOMAIN, data=self.options)
 
